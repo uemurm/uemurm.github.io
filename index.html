@@ -1,0 +1,59 @@
+<input type="file" id="audioFile" accept="audio/*">
+<input type="file" id="jsonFile" accept=".json">
+
+<audio id="player" controls></audio>
+<div id="transcript"></div>
+
+<script>
+const player = document.getElementById('player');
+const audioInput = document.getElementById('audioFile');
+const jsonInput = document.getElementById('jsonFile');
+let spans = [];
+
+// 音声ファイル読み込み
+audioInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  player.src = URL.createObjectURL(file);
+  player.play();
+});
+
+// JSON ファイル読み込み
+jsonInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const segments = JSON.parse(reader.result);
+    const container = document.getElementById('transcript');
+    container.innerHTML = ''; // 前の内容をクリア
+    spans = [];
+
+    segments.forEach(seg => {
+      const span = document.createElement('span');
+      span.textContent = seg.text + " ";
+      span.dataset.start = seg.start;
+      span.dataset.end = seg.end;
+      container.appendChild(span);
+      spans.push(span);
+    });
+  };
+  reader.readAsText(file);
+});
+
+// ハイライト同期
+player.addEventListener('timeupdate', () => {
+  const current = player.currentTime;
+  spans.forEach(span => {
+    const start = parseFloat(span.dataset.start);
+    const end = parseFloat(span.dataset.end);
+    span.classList.toggle('active', current >= start && current < end);
+  });
+});
+</script>
+
+<style>
+#transcript span { opacity:0.4; transition:0.2s; }
+#transcript span.active { opacity:1; font-weight:bold; }
+</style>
