@@ -1,14 +1,97 @@
-<input type="file" id="audioFile" accept="audio/*">
-<input type="file" id="jsonFile" accept=".json">
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>字幕音声同期プレイヤー</title>
+<style>
+  :root { --font-size: 20px; }
 
-<audio id="player" controls></audio>
+  body {
+    font-family: sans-serif;
+    line-height: 1.8;
+    font-size: var(--font-size);
+    margin-bottom: 80px; /* プレーヤー高さ分 */
+  }
+
+  #transcript span {
+    opacity: 0.4;
+    transition: opacity 0.2s ease, font-weight 0.2s ease;
+  }
+
+  #transcript span.active {
+    opacity: 1;
+    font-weight: bold;
+  }
+
+  /* プレーヤー固定 */
+  .player-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    background: #222;
+    padding: 5px 10px;
+    z-index: 9999;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+  }
+
+  audio {
+    width: 99%;
+    height: 40px;
+    outline: none;
+  }
+
+  .controls {
+    margin-top: 5px;
+    text-align: center;
+  }
+
+  button {
+    margin: 2px 5px;
+    padding: 4px 10px;
+    font-size: 14px;
+  }
+
+  .file-inputs {
+    margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>字幕音声同期プレイヤー</h1>
+
+<div class="file-inputs">
+  <label>字幕ファイル: <input type="file" id="jsonFile" accept=".json"></label>
+  <label>音声ファイル: <input type="file" id="audioFile" accept="audio/*"></label>
+</div>
+
 <div id="transcript"></div>
+
+<div class="player-container">
+  <audio id="player" controls></audio>
+  <div class="controls">
+    <button id="back10">⏪ 10秒戻る</button>
+    <button id="back5">⏪ 5秒戻る</button>
+    <button id="forward5">5秒進む ⏩</button>
+    <button id="forward10">10秒進む ⏩</button>
+  </div>
+</div>
 
 <script>
 const player = document.getElementById('player');
 const audioInput = document.getElementById('audioFile');
 const jsonInput = document.getElementById('jsonFile');
+const transcriptContainer = document.getElementById('transcript');
 let spans = [];
+
+// 汎用シーク関数
+function seek(delta) {
+  const requested = player.currentTime + delta;
+  player.currentTime = Math.min(player.duration || requested, Math.max(0, requested));
+}
 
 // 音声ファイル読み込み
 audioInput.addEventListener('change', e => {
@@ -26,8 +109,7 @@ jsonInput.addEventListener('change', e => {
   const reader = new FileReader();
   reader.onload = () => {
     const segments = JSON.parse(reader.result);
-    const container = document.getElementById('transcript');
-    container.innerHTML = ''; // 前の内容をクリア
+    transcriptContainer.innerHTML = '';
     spans = [];
 
     segments.forEach(seg => {
@@ -35,7 +117,7 @@ jsonInput.addEventListener('change', e => {
       span.textContent = seg.text + " ";
       span.dataset.start = seg.start;
       span.dataset.end = seg.end;
-      container.appendChild(span);
+      transcriptContainer.appendChild(span);
       spans.push(span);
     });
   };
@@ -51,9 +133,26 @@ player.addEventListener('timeupdate', () => {
     span.classList.toggle('active', current >= start && current < end);
   });
 });
+
+// ボタンイベント
+document.getElementById('back10').addEventListener('click', () => seek(-10));
+document.getElementById('back5').addEventListener('click', () => seek(-5));
+document.getElementById('forward5').addEventListener('click', () => seek(+5));
+document.getElementById('forward10').addEventListener('click', () => seek(+10));
+
+// ホットキー
+document.addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'k') {
+    e.preventDefault();
+    if(player.paused) player.play();
+    else player.pause();
+  }
+  if(e.key === 'j') seek(-10);
+  if(e.key === 'l') seek(+10);
+  if(e.key === 'ArrowLeft') seek(-5);
+  if(e.key === 'ArrowRight') seek(+5);
+});
 </script>
 
-<style>
-#transcript span { opacity:0.4; transition:0.2s; }
-#transcript span.active { opacity:1; font-weight:bold; }
-</style>
+</body>
+</html>
