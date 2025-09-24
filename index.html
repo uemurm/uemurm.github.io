@@ -124,13 +124,22 @@ jsonInput.addEventListener('change', e => {
   reader.readAsText(file);
 });
 
-// ハイライト同期
+// ハイライト同期 + 自動スクロール
 player.addEventListener('timeupdate', () => {
   const current = player.currentTime;
   spans.forEach(span => {
     const start = parseFloat(span.dataset.start);
     const end = parseFloat(span.dataset.end);
-    span.classList.toggle('active', current >= start && current < end);
+    const isActive = current >= start && current < end;
+    span.classList.toggle('active', isActive);
+
+    if (isActive) {
+      // 中央にスクロール（画面中央に配置）
+      const rect = span.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const offset = rect.top - viewportHeight/2 + rect.height/2;
+      window.scrollBy({ top: offset, behavior: 'smooth' });
+    }
   });
 });
 
