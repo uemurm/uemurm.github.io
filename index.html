@@ -63,9 +63,18 @@
 
 <h1>字幕音声同期プレイヤー</h1>
 
-<div class="file-inputs">
-  <label>字幕ファイル: <input type="file" id="jsonFile" accept=".json"></label>
-  <label>音声ファイル: <input type="file" id="audioFile" accept="audio/*"></label>
+<div class="subtitle-input">
+  <label for="jsonFile" accesskey="s">
+    字幕ファイル (Alt+S): 
+    <input type="file" id="jsonFile" accept=".json">
+  </label>
+</div>
+
+<div class="audio-input">
+  <label for="audioFile" accesskey="a">
+    音声ファイル (Alt+A): 
+    <input type="file" id="audioFile" accept="audio/*">
+  </label>
 </div>
 
 <div id="transcript"></div>
